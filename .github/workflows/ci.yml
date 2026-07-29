@@ -1,0 +1,22 @@
+name: ci
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        # macos-latest is arm64 (NEON kernel), ubuntu-latest is amd64 (SWAR).
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+      - run: go vet ./...
+      - run: go test ./...
+      - run: go test -fuzz FuzzIndex -fuzztime 30s .
+      - run: go test -bench . -benchtime 1x -run '^$' .
